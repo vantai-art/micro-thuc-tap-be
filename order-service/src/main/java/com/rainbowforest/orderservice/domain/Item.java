@@ -1,41 +1,42 @@
 package com.rainbowforest.orderservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
-// Chuyển đổi toàn bộ sang jakarta
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table (name = "items")
-@EqualsAndHashCode
+@Table(name = "items")
 public class Item {
-    
+
     @Id
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     private Long id;
 
-    @Column (name = "quantity")
+    @Column(name = "quantity")
     @NotNull
     private int quantity;
 
-    @Column (name = "subtotal")
+    @Column(name = "subtotal")
     @NotNull
     private BigDecimal subTotal;
 
-    // CascadeType.ALL ở đây cần cẩn thận: nếu xóa Item, nó có thể xóa luôn Product gốc.
-    // Thường thì với Product, chúng ta chỉ nên dùng MERGE hoặc PERSIST.
-    @ManyToOne (cascade = CascadeType.ALL)
-    @JoinColumn (name = "product_id")
+    /**
+     * FIX: CascadeType.ALL → PERSIST+MERGE
+     * CascadeType.ALL khiến Hibernate cố INSERT product vào bảng products
+     * mỗi lần tạo order → Duplicate key exception → 500.
+     * PERSIST+MERGE: chỉ upsert, không INSERT trùng.
+     */
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToMany (mappedBy = "items")
+    @ManyToMany(mappedBy = "items")
     @JsonIgnore
     private List<Order> orders;
-    
+
     public Item() {
     }
 
@@ -45,7 +46,6 @@ public class Item {
         this.subTotal = subTotal;
     }
 
-    // --- Getter & Setter ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public int getQuantity() { return quantity; }

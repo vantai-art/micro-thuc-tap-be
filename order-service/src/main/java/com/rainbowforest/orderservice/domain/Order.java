@@ -1,5 +1,6 @@
 package com.rainbowforest.orderservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -25,97 +26,89 @@ public class Order {
     @Column(name = "total")
     private BigDecimal total;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "order_items_mapping", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "item_id"))
+    // FIX: CascadeType.ALL → PERSIST,MERGE để tránh Hibernate lỗi khi load
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "order_items_mapping",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "item_id"))
     private List<Item> items;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    /**
+     * FIX: Bỏ @ManyToOne User (@Entity) → thay bằng 2 cột đơn giản
+     * Tránh Hibernate JOIN vào bảng "users" không tồn tại trong orders_db → hết 500
+     */
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(name = "user_name")
+    private String userName;
+
+    /**
+     * Transient: dùng để tương thích với code cũ gọi order.getUser()
+     * Không map vào DB
+     */
+    @Transient
     private User user;
 
-    // =============================================
-    // THÊM MỚI: Liên kết bàn & tên khách hàng
-    // =============================================
-
-    /**
-     * Bàn mà order này thuộc về.
-     * Nullable: trường hợp đặt online (delivery) thì không cần bàn.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "table_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private DiningTable diningTable;
 
-    /**
-     * Tên khách hàng do nhân viên điền vào (khách vãng lai không cần tài khoản).
-     */
     @Column(name = "customer_name")
     private String customerName;
 
-    public Order() {
-    }
+    public Order() {}
 
-    // --- Getters & Setters ---
-    public Long getId() {
-        return id;
-    }
+    // ─── Getters & Setters ───────────────────────────────────────
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public LocalDate getOrderedDate() {
-        return orderedDate;
-    }
+    public LocalDate getOrderedDate() { return orderedDate; }
+    public void setOrderedDate(LocalDate orderedDate) { this.orderedDate = orderedDate; }
 
-    public void setOrderedDate(LocalDate orderedDate) {
-        this.orderedDate = orderedDate;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public String getStatus() {
-        return status;
-    }
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public List<Item> getItems() { return items; }
+    public void setItems(List<Item> items) { this.items = items; }
 
-    public BigDecimal getTotal() {
-        return total;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    public void setTotal(BigDecimal total) {
-        this.total = total;
-    }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
-    public List<Item> getItems() {
-        return items;
-    }
-
-    public void setItems(List<Item> items) {
-        this.items = items;
-    }
-
+    /**
+     * FIX: getUser() tổng hợp từ userId/userName → tương thích ngược với code cũ
+     */
     public User getUser() {
-        return user;
+        if (user != null) return user;
+        if (userId == null) return null;
+        User u = new User();
+        u.setId(userId);
+        u.setUserName(userName);
+        return u;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    /**
+     * FIX: setUser() tách ra lưu userId/userName thay vì @ManyToOne
+     */
+    public void setUser(User u) {
+        this.user = u;
+        if (u != null) {
+            this.userId = u.getId();
+            this.userName = u.getUserName();
+        }
     }
 
-    public DiningTable getDiningTable() {
-        return diningTable;
-    }
+    public DiningTable getDiningTable() { return diningTable; }
+    public void setDiningTable(DiningTable diningTable) { this.diningTable = diningTable; }
 
-    public void setDiningTable(DiningTable diningTable) {
-        this.diningTable = diningTable;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 }

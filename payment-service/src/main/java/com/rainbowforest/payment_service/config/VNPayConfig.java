@@ -7,8 +7,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.text.SimpleDateFormat;import java.util.*;
 import java.util.TimeZone;
 
 @Component
@@ -81,12 +80,14 @@ public class VNPayConfig {
         params.put("vnp_Locale", "vn");
         params.put("vnp_ReturnUrl", returnUrl);
         params.put("vnp_IpAddr", clientIp);
-        String createDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-        params.put("vnp_CreateDate", createDate);
-        // Thêm thời hạn thanh toán: 15 phút kể từ khi tạo
+        // QUAN TRỌNG: VNPay yêu cầu thời gian theo múi giờ Asia/Ho_Chi_Minh (GMT+7)
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        params.put("vnp_CreateDate", sdf.format(cal.getTime()));
+        // Thêm thời hạn thanh toán: 15 phút kể từ khi tạo
         cal.add(Calendar.MINUTE, 15);
-        params.put("vnp_ExpireDate", new SimpleDateFormat("yyyyMMddHHmmss").format(cal.getTime()));
+        params.put("vnp_ExpireDate", sdf.format(cal.getTime()));
 
         // Build query string
         StringBuilder query = new StringBuilder();

@@ -201,4 +201,41 @@ public class UserController {
         }
         return new ResponseEntity<>(headerGenerator.getHeadersForError(), HttpStatus.NOT_FOUND);
     }
+
+    // ==========================================
+    // CHANGE PASSWORD
+    // POST /users/{id}/change-password
+    // Body: { "currentPassword": "...", "newPassword": "..." }
+    // ==========================================
+
+    @PostMapping(value = "/users/{id}/change-password")
+    public ResponseEntity<?> changePassword(
+            @PathVariable("id") Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        if (currentPassword == null || newPassword == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", "Vui lòng nhập đủ mật khẩu cũ và mật khẩu mới"));
+        }
+        if (newPassword.length() < 4) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", "Mật khẩu mới phải có ít nhất 4 ký tự"));
+        }
+
+        User user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Map.of("message", "Không tìm thấy tài khoản"));
+        }
+        if (!user.getUserPassword().equals(currentPassword)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Map.of("message", "Mật khẩu hiện tại không đúng"));
+        }
+
+        user.setUserPassword(newPassword);
+        userService.updateUser(id, user);
+        return ResponseEntity.ok(java.util.Map.of("message", "Đổi mật khẩu thành công"));
+    }
 }

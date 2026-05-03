@@ -28,10 +28,14 @@ public class CorsConfig {
         // ✅ Danh sách origin được phép — thêm origin mới vào đây
         private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
                         "http://localhost:8081", // Expo Web / React Native Web (dev)
-                        "http://localhost:3000", // React Web (nếu có)
+                        "http://localhost:3000", // React Web (create-react-app default)
                         "http://localhost:19006", // Expo Web alt port
                         "http://10.0.2.2:8081", // Android Emulator → host machine
-                        "http://127.0.0.1:8081" // Loopback alias
+                        "http://127.0.0.1:8081", // Loopback alias
+                        "http://127.0.0.1:3000", // Loopback alias cho React
+                        "http://localhost:5173", // Vite dev server
+                        "http://localhost:4000",  // Alt port
+                        "http://localhost:8080"   // Same origin (gateway itself)
         );
 
         @Bean
@@ -43,8 +47,8 @@ public class CorsConfig {
                 config.setAllowCredentials(true);
                 config.setMaxAge(3600L);
 
-                // Quan trọng: không để lộ header Access-Control-Allow-Origin từ upstream
-                config.setExposedHeaders(Arrays.asList()); // hoặc không set
+                // Expose headers cần thiết cho frontend
+                config.setExposedHeaders(Arrays.asList("Authorization", "Location", "Access-Control-Allow-Origin"));
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", config);

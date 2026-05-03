@@ -17,23 +17,32 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order saveOrder(Order order) {
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        // Force-initialize lazy associations trước khi rời transaction
+        // để tránh LazyInitializationException khi Jackson serialize response
+        initOrder(saved);
+        return saved;
     }
 
     @Override
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();
+        orders.forEach(this::initOrder);
+        return orders;
     }
 
     @Override
     public Order getOrderById(Long id) {
-        return orderRepository.findById(id).orElse(null);
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order != null)
+            initOrder(order);
+        return order;
     }
 
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findAll().stream()
-                .filter(o -> o.getUser() != null && userId.equals(o.getUser().getId()))
+                .filter(o -> userId.equals(o.getUserId()))
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +51,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng id: " + id));
         order.setStatus(status);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        initOrder(saved);
+        return saved;
     }
 
     @Override
@@ -50,5 +61,18 @@ public class OrderServiceImpl implements OrderService {
         if (!orderRepository.existsById(id))
             throw new RuntimeException("Không tìm thấy đơn hàng id: " + id);
         orderRepository.deleteById(id);
+    }
+
+    /** Force-initialize tất cả lazy associations trong transaction */
+    private void initOrder(Order o) {
+        if (o.getItems() != null) {
+            o.getItems().forEach(item -> {
+                if (item.getProduct() != null)
+                    item.getProduct().getProductName();
+            });
+        }
+        if (o.getDiningTable() != null)
+            o.getDiningTable().getNumber();
+        // User is now stored as userId/userName columns - no lazy init needed
     }
 }

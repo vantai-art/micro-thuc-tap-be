@@ -98,7 +98,7 @@ public class OrderController {
         if (cart != null && !cart.isEmpty() && user != null) {
             Order order = createOrder(cart, user);
             try {
-                orderService.saveOrder(order);
+                order = orderService.saveOrder(order);
                 cartService.deleteCart(cartId);
                 return new ResponseEntity<>(
                         order,
@@ -125,15 +125,26 @@ public class OrderController {
             return new ResponseEntity<>(headerGenerator.getHeadersForError(), HttpStatus.BAD_REQUEST);
         }
 
-        User user = userClient.getUserById(userId);
-        if (user == null) {
-            return new ResponseEntity<>(headerGenerator.getHeadersForError(), HttpStatus.NOT_FOUND);
+        // FIX: Không gọi Feign UserClient nữa — userId đã đủ để lưu order.
+        // Tạo User object trực tiếp từ pathVariable, tránh lỗi 500 khi user-service
+        // không phản hồi.
+        User user = new User();
+        user.setId(userId);
+
+        // Cố gắng lấy thêm userName từ user-service, nhưng KHÔNG throw lỗi nếu fail
+        try {
+            User fetchedUser = userClient.getUserById(userId);
+            if (fetchedUser != null && fetchedUser.getUserName() != null) {
+                user.setUserName(fetchedUser.getUserName());
+            }
+        } catch (Exception ignored) {
+            // user-service không phản hồi → vẫn tiếp tục với userId, userName = null
         }
 
         try {
             List<Item> items = parseCartItems(cartItems);
             Order order = createOrder(items, user);
-            orderService.saveOrder(order);
+            order = orderService.saveOrder(order);
 
             return new ResponseEntity<>(
                     order,
@@ -179,7 +190,7 @@ public class OrderController {
             order.setOrderedDate(LocalDate.now());
             order.setStatus("PAYMENT_EXPECTED");
 
-            orderService.saveOrder(order);
+            order = orderService.saveOrder(order);
 
             // Đánh dấu bàn đang bận
             table.setStatus("OCCUPIED");

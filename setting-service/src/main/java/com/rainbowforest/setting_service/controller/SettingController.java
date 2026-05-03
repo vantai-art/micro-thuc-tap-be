@@ -219,6 +219,19 @@ public class SettingController {
         return ResponseEntity.ok(new SettingDto.SettingsResponse(true, "Đã lưu cài đặt admin", updated));
     }
 
+    @DeleteMapping("/settings/admin/{adminId}/reset")
+    public ResponseEntity<SettingDto.SettingsResponse> resetAdminSettings(@PathVariable Long adminId) {
+        settingService.resetUserSettings(SettingScope.ADMIN, adminId);
+        return ResponseEntity.ok(new SettingDto.SettingsResponse(true, "Đã đặt lại cài đặt admin về mặc định", null));
+    }
+
+    @PostMapping("/settings/admin/{adminId}/init")
+    public ResponseEntity<SettingDto.SettingsResponse> initAdminSettings(@PathVariable Long adminId) {
+        settingService.initDefaultUserSettings(SettingScope.ADMIN, adminId);
+        Map<String, Object> data = settingService.getUserSettings(SettingScope.ADMIN, adminId);
+        return ResponseEntity.ok(new SettingDto.SettingsResponse(true, "Đã khởi tạo cài đặt admin mặc định", data));
+    }
+
     // ══════════════════════════════════════════════════════════════
     // NOTIFICATIONS (generic endpoint cho mọi scope)
     // ══════════════════════════════════════════════════════════════
