@@ -1,0 +1,49 @@
+app = "ecom-product-catalog"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SERVER_PORT = "8810"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  SPRING_JPA_DATABASE_PLATFORM = "org.hibernate.dialect.MySQLDialect"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS = "false"
+  EUREKA_INSTANCE_HOSTNAME = "ecom-product-catalog.fly.dev"
+  APP_UPLOAD_DIR = "./uploads"
+  APP_BASE_URL = "https://ecom-product-catalog.fly.dev"
+  SPRING_SERVLET_MULTIPART_ENABLED = "true"
+  SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE = "5MB"
+  SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE = "6MB"
+
+# Secrets (set bằng: flyctl secrets set KEY=value)
+# SPRING_DATASOURCE_URL
+# SPRING_DATASOURCE_USERNAME
+# SPRING_DATASOURCE_PASSWORD
+# EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+
+[http_service]
+  internal_port = 8810
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[mounts]
+  source = "product_uploads"
+  destination = "/app/uploads"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "120s"
+    interval = "20s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8810
+    timeout = "10s"
+    type = "http"

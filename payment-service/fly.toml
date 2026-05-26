@@ -1,0 +1,45 @@
+app = "ecom-payment-service"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SERVER_PORT = "8819"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS = "false"
+  EUREKA_INSTANCE_HOSTNAME = "ecom-payment-service.fly.dev"
+  VNPAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  VNPAY_RETURN_URL = "https://ecom-api-gateway.fly.dev/api/payments/vnpay/return"
+  VNPAY_FRONTEND_SUCCESS_URL = "https://YOUR_FRONTEND_URL/checkout"
+  VNPAY_FRONTEND_FAIL_URL = "https://YOUR_FRONTEND_URL/checkout"
+
+# Secrets (set bằng: flyctl secrets set KEY=value)
+# SPRING_DATASOURCE_URL
+# SPRING_DATASOURCE_USERNAME
+# SPRING_DATASOURCE_PASSWORD
+# EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+# VNPAY_TMN_CODE
+# VNPAY_HASH_SECRET
+
+[http_service]
+  internal_port = 8819
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "120s"
+    interval = "20s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8819
+    timeout = "10s"
+    type = "http"

@@ -1,0 +1,40 @@
+app = "ecom-recommendation"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SERVER_PORT = "8812"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  SPRING_JPA_DATABASE_PLATFORM = "org.hibernate.dialect.MySQLDialect"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS = "false"
+  EUREKA_INSTANCE_HOSTNAME = "ecom-recommendation.fly.dev"
+
+# Secrets (set bằng: flyctl secrets set KEY=value)
+# SPRING_DATASOURCE_URL
+# SPRING_DATASOURCE_USERNAME
+# SPRING_DATASOURCE_PASSWORD
+# EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+
+[http_service]
+  internal_port = 8812
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "120s"
+    interval = "20s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8812
+    timeout = "10s"
+    type = "http"

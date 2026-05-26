@@ -1,0 +1,44 @@
+app = "ecom-order-service"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SERVER_PORT = "8813"
+  SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
+  SPRING_JPA_DATABASE_PLATFORM = "org.hibernate.dialect.MySQLDialect"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS = "false"
+  EUREKA_INSTANCE_HOSTNAME = "ecom-order-service.fly.dev"
+  SPRING_SESSION_STORE_TYPE = "none"
+  SPRING_DATA_REDIS_PORT = "6379"
+
+# Secrets (set bằng: flyctl secrets set KEY=value)
+# SPRING_DATASOURCE_URL
+# SPRING_DATASOURCE_USERNAME
+# SPRING_DATASOURCE_PASSWORD
+# EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+# SPRING_DATA_REDIS_HOST
+# SPRING_DATA_REDIS_PASSWORD  (Upstash yêu cầu)
+
+[http_service]
+  internal_port = 8813
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "120s"
+    interval = "20s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8813
+    timeout = "10s"
+    type = "http"

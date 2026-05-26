@@ -1,0 +1,37 @@
+app = "ecom-api-gateway"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  SERVER_PORT = "8080"
+  SPRING_APPLICATION_NAME = "api-gateway"
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS = "false"
+  EUREKA_INSTANCE_HOSTNAME = "ecom-api-gateway.fly.dev"
+  SPRING_SESSION_STORE_TYPE = "none"
+
+# Secrets (set bằng: flyctl secrets set KEY=value)
+# EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[checks]
+  [checks.health]
+    grace_period = "150s"
+    interval = "20s"
+    method = "GET"
+    path = "/actuator/health"
+    port = 8080
+    timeout = "10s"
+    type = "http"
