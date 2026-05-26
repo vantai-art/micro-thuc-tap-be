@@ -29,13 +29,14 @@ public class CorsConfig {
         private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
                         "http://localhost:8081", // Expo Web / React Native Web (dev)
                         "http://localhost:3000", // React Web (create-react-app default)
+                        "http://frontend:3000", // React Web (Docker Compose)
                         "http://localhost:19006", // Expo Web alt port
                         "http://10.0.2.2:8081", // Android Emulator → host machine
                         "http://127.0.0.1:8081", // Loopback alias
                         "http://127.0.0.1:3000", // Loopback alias cho React
                         "http://localhost:5173", // Vite dev server
-                        "http://localhost:4000",  // Alt port
-                        "http://localhost:8080"   // Same origin (gateway itself)
+                        "http://localhost:4000", // Alt port
+                        "http://localhost:8080" // Same origin (gateway itself)
         );
 
         @Bean
