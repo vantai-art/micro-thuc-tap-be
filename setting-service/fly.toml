@@ -1,4 +1,4 @@
-app = "ecom-setting-service"
+app = "ecom-setting-svc"
 primary_region = "sin"
 
 [build]

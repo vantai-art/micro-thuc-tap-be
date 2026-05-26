@@ -1,4 +1,4 @@
-app = "ecom-order-service"
+app = "ecom-order-svc"
 primary_region = "sin"
 
 [build]

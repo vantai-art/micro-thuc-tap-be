@@ -1,4 +1,4 @@
-app = "ecom-api-gateway"
+app = "ecom-api-gw"
 primary_region = "sin"
 
 [build]
